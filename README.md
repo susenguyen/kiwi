@@ -18,7 +18,7 @@
     - xorriso
 
 # Running kiwi-ng
-- Set the TARGET_DIR to whatever directory you want to save your images to
+- Set the TARGET_DIR to whatever directory you want to save your images to (./target by default)
 ```
-kiwi-ng --profile=x86-self_install --type=oem system build --description=desc --target-dir=${TARGET_DIR}
+kiwi-ng --profile=x86-self_install --type=oem system build --description=desc --target-dir=${TARGET_DIR:-target}
 ```
