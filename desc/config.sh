@@ -118,6 +118,34 @@ sed -e '/^PERMISSION_SECURITY=s/easy/paranoid/' /etc/sysconfig/security
 chkstat --set --system
 
 #======================================
+# NMS - Personal CA Certificate
+#--------------------------------------
+cat >/etc/pki/trust/anchors/ca.crt <<EOF
+-----BEGIN CERTIFICATE-----
+MIIDrzCCApegAwIBAgIUZqMU+a5hVmNmcnqCvyoFaGysV4AwDQYJKoZIhvcNAQEL
+BQAwfzELMAkGA1UEBhMCRVMxCzAJBgNVBAgMAkVTMRYwFAYDVQQHDA1DYXN0ZWxs
+ZGVmZWxzMQ0wCwYDVQQKDARzdXNlMQwwCgYDVQQLDANsYWIxEDAOBgNVBAMMB1Jv
+b3QgQ0ExHDAaBgkqhkiG9w0BCQEWDXRpdGlAc3VzZS5sYWIwHhcNMjQwMjI3MTc1
+MzE0WhcNMzQwMjI0MTc1MzE0WjB/MQswCQYDVQQGEwJFUzELMAkGA1UECAwCRVMx
+FjAUBgNVBAcMDUNhc3RlbGxkZWZlbHMxDTALBgNVBAoMBHN1c2UxDDAKBgNVBAsM
+A2xhYjEQMA4GA1UEAwwHUm9vdCBDQTEcMBoGCSqGSIb3DQEJARYNdGl0aUBzdXNl
+LmxhYjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBANdjdDvv6KaY1xVT
+cyLseyOz3FpaV45CSFbrsBkxtmA+Arp+gkSF3woED/mE4QhWoAywCGoH09ERWHuG
+NeH5uofmno5ipN8Ya32McJwOT1xNfWx8zYHuqMTMOZmMyAg8oGCgcwXSBvSzgbPQ
+OVePJknF11OmCkUx323NAlvN3sLtV/tGLL9UKCYmoCFfiwuK9YC3QDEcpNXYgcLF
+mfzC+fHFCy99WS02QeJObNTKqdFqZXcXL2qTb6hIr2D0mIFSX5utibHxerIPNlEI
+9OSvhHG4IAE4i6xJFQAWaeP0ZJu8VP7QwGh3C5Bb4BZFANLOIVa1SVWuNmKAZ60C
+Sj75BocCAwEAAaMjMCEwDwYDVR0TAQH/BAUwAwEB/zAOBgNVHQ8BAf8EBAMCAQYw
+DQYJKoZIhvcNAQELBQADggEBAJKhns34fXP38NIFr2FyhA1dgjKw6osgta4mTEG+
+0FN/K4//6IFF9c2ct+2WlN1hqwPl490X6C9DRfWhvSdPxZotng5/rNGE2fFuA+qs
+EfTom0K+k/+8HGNNnIXoM+6pZ9mAEtbbkFtD857tMJEF0awcGnof1hbkE3xACXi7
+EEiLwcSC9PFdXGorfa+83cLzx+XRVcx7ExJca/6iSS8L0Hlm/V/9RhO5xxKnCyQb
+HHnSjueNmtr6vvtVRAGBv9p6jrDGtl5QZrcfZFIh82mQAWel6mwjO1KqCMBmwSMZ
++IAFsEsqLQSzbtghbN/CeMBvD8lem+IEnqGx9jSkVf89v0w=
+-----END CERTIFICATE-----
+EOF
+
+#======================================
 # SSL Certificates Configuration
 #--------------------------------------
 echo '** Rehashing SSL Certificates...'
@@ -141,9 +169,16 @@ fi
 # Adjust zypp conf
 # https://github.com/openSUSE/libzypp/issues/212
 # in yast that's done in packager/cfa/zypp_conf.rb
-sed -i 's/.*solver.onlyRequires.*/solver.onlyRequires = true/g' /etc/zypp/zypp.conf
-sed -i 's/.*rpm.install.excludedocs.*/rpm.install.excludedocs = yes/g' /etc/zypp/zypp.conf
-sed -i 's/^multiversion =.*/multiversion =/g' /etc/zypp/zypp.conf
+if [ -f /etc/zypp/zypp.conf ] ; then
+	sed -i 's/.*solver.onlyRequires.*/solver.onlyRequires = true/g' /etc/zypp/zypp.conf
+	sed -i 's/.*rpm.install.excludedocs.*/rpm.install.excludedocs = yes/g' /etc/zypp/zypp.conf
+	sed -i 's/^multiversion =.*/multiversion =/g' /etc/zypp/zypp.conf
+else
+	echo "[main]"				>> /etc/zypp/zypp.conf.d/micro.conf
+	echo "solver.onlyRequires = true"	>> /etc/zypp/zypp.conf.d/micro.conf
+	echo "rpm.install.excludedocs = yes"	>> /etc/zypp/zypp.conf.d/micro.conf
+	echo "multiversion ="			>> /etc/zypp/zypp.conf.d/micro.conf
+fi
 
 #=====================================
 # Configure snapper
@@ -188,7 +223,6 @@ cat >/etc/fstab.script <<"EOF"
 #!/bin/sh
 set -eux
 
-/usr/sbin/setup-fstab-for-overlayfs
 # If /var is on a different partition than /...
 if [ "$(findmnt -snT / -o SOURCE)" != "$(findmnt -snT /var -o SOURCE)" ]; then
 	# ... set options for autoexpanding /var
