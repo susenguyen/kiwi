@@ -1056,9 +1056,11 @@
     </preferences>
 
 
+   <!-- NMS BEGIN -->
    <repository type="rpm-md" >
         <source path='http://rmt.suse.lab/repo/SUSE/Products/SL-Micro/6.2/x86_64/product/'/>
     </repository>
+   <!-- NMS END -->
 
     <packages type="image" profiles="full">
         <namedCollection name="transactional_base"/>
@@ -1156,6 +1158,17 @@
 	<package name="parted"/> <!-- seems missing to deploy the image -->
 	<package name="iptables"/> <!-- needed by RKE2 -->
     </packages>
+
+    <!-- NMS BEGIN (for Kubernetes and Longhorn)-->
+    <packages type="image" profiles="x86-self_install">
+        <package name="jq"/>
+        <package name="helm"/>
+        <package name="nfs-client"/>
+        <package name="open-iscsi"/>
+        <package name="cryptsetup"/>
+        <package name="device-mapper"/>
+    </packages>
+    <!-- NMS END -->
 
     <packages type="image" profiles="bootloader">
         <package name="grub2-i386-pc" arch="x86_64"/>
